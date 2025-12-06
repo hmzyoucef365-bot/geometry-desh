@@ -1,0 +1,1083 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Geometry Dash Clone</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0c0c2e 0%, #1a1a3e 100%);
+            color: white;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            overflow-x: hidden;
+        }
+
+        .game-title {
+            text-align: center;
+            margin-bottom: 15px;
+            text-shadow: 0 0 10px #00a8ff;
+        }
+
+        .game-title h1 {
+            font-size: 2.8rem;
+            background: linear-gradient(90deg, #00a8ff, #9c88ff, #00a8ff);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            background-size: 200% auto;
+            animation: shine 3s linear infinite;
+        }
+
+        @keyframes shine {
+            to { background-position: 200% center; }
+        }
+
+        .game-container {
+            position: relative;
+            width: 100%;
+            max-width: 900px;
+            height: 500px;
+            margin: 0 auto;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
+            background: #111;
+        }
+
+        #game-canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+            background: #0a0a1a;
+        }
+
+        .game-ui {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            max-width: 900px;
+            margin-top: 20px;
+            padding: 0 10px;
+        }
+
+        .score-container, .high-score-container {
+            background: rgba(0, 0, 0, 0.7);
+            padding: 15px 25px;
+            border-radius: 10px;
+            border: 2px solid #00a8ff;
+            box-shadow: 0 0 15px rgba(0, 168, 255, 0.5);
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        .score-value, .high-score-value {
+            color: #00ff9d;
+            text-shadow: 0 0 5px #00ff9d;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-top: 25px;
+            width: 100%;
+            max-width: 900px;
+            flex-wrap: wrap;
+        }
+
+        .control-btn {
+            background: linear-gradient(145deg, #00a8ff, #0077b6);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 50px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 5px 15px rgba(0, 168, 255, 0.4);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .control-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0, 168, 255, 0.6);
+        }
+
+        .control-btn:active {
+            transform: translateY(1px);
+        }
+
+        .control-btn.start {
+            background: linear-gradient(145deg, #00b894, #00a085);
+        }
+
+        .control-btn.restart {
+            background: linear-gradient(145deg, #e84118, #c23616);
+        }
+
+        .mobile-controls {
+            display: none;
+            width: 100%;
+            max-width: 900px;
+            margin-top: 30px;
+            justify-content: center;
+        }
+
+        .jump-btn {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: linear-gradient(145deg, #00a8ff, #0077b6);
+            border: none;
+            color: white;
+            font-size: 1.5rem;
+            font-weight: bold;
+            box-shadow: 0 8px 20px rgba(0, 168, 255, 0.6);
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .jump-btn:active {
+            transform: scale(0.95);
+            box-shadow: 0 4px 10px rgba(0, 168, 255, 0.8);
+        }
+
+        .instructions {
+            background: rgba(0, 0, 0, 0.7);
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 25px;
+            width: 100%;
+            max-width: 900px;
+            border-left: 5px solid #9c88ff;
+        }
+
+        .instructions h3 {
+            color: #9c88ff;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .instructions ul {
+            padding-left: 20px;
+            line-height: 1.6;
+        }
+
+        .instructions li {
+            margin-bottom: 8px;
+        }
+
+        .difficulty {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .diff-btn {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border: 2px solid #9c88ff;
+            padding: 10px 20px;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .diff-btn.active {
+            background: #9c88ff;
+            box-shadow: 0 0 15px rgba(156, 136, 255, 0.7);
+        }
+
+        .game-over {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+            border-radius: 12px;
+        }
+
+        .game-over h2 {
+            font-size: 3.5rem;
+            color: #e84118;
+            margin-bottom: 20px;
+            text-shadow: 0 0 15px #e84118;
+        }
+
+        .game-over p {
+            font-size: 1.8rem;
+            margin-bottom: 30px;
+        }
+
+        .game-over .final-score {
+            color: #00ff9d;
+            font-size: 2.2rem;
+            text-shadow: 0 0 10px #00ff9d;
+        }
+
+        .character-selector {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .character {
+            width: 60px;
+            height: 60px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 3px solid transparent;
+        }
+
+        .character:hover {
+            transform: scale(1.1);
+        }
+
+        .character.active {
+            border-color: #00a8ff;
+            box-shadow: 0 0 15px #00a8ff;
+        }
+
+        .cube {
+            background: linear-gradient(145deg, #00a8ff, #0077b6);
+        }
+
+        .ship {
+            background: linear-gradient(145deg, #9c88ff, #8c7ae6);
+            clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+        }
+
+        .ufo {
+            background: linear-gradient(145deg, #e84118, #c23616);
+            border-radius: 50%;
+        }
+
+        .footer {
+            margin-top: 25px;
+            text-align: center;
+            color: #aaa;
+            font-size: 0.9rem;
+            padding-bottom: 20px;
+        }
+
+        /* Responsive design */
+        @media (max-width: 768px) {
+            .game-container {
+                height: 350px;
+            }
+            
+            .game-title h1 {
+                font-size: 2.2rem;
+            }
+            
+            .score-container, .high-score-container {
+                padding: 12px 20px;
+                font-size: 1.2rem;
+            }
+            
+            .controls {
+                gap: 15px;
+            }
+            
+            .control-btn {
+                padding: 12px 24px;
+                font-size: 1.1rem;
+            }
+            
+            .mobile-controls {
+                display: flex;
+            }
+            
+            .instructions {
+                font-size: 0.9rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .game-container {
+                height: 300px;
+            }
+            
+            .game-title h1 {
+                font-size: 1.8rem;
+            }
+            
+            .game-ui {
+                flex-direction: column;
+                gap: 10px;
+                align-items: center;
+            }
+            
+            .controls {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .control-btn {
+                width: 90%;
+                justify-content: center;
+            }
+            
+            .jump-btn {
+                width: 100px;
+                height: 100px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-title">
+        <h1><i class="fas fa-gamepad"></i> GEOMETRY DASH CLONE</h1>
+    </div>
+
+    <div class="game-container">
+        <canvas id="game-canvas"></canvas>
+        
+        <div class="game-over" id="game-over">
+            <h2>GAME OVER</h2>
+            <p>Your score: <span class="final-score" id="final-score">0</span></p>
+            <button class="control-btn restart" id="restart-btn">
+                <i class="fas fa-redo"></i> PLAY AGAIN
+            </button>
+        </div>
+    </div>
+
+    <div class="game-ui">
+        <div class="score-container">
+            SCORE: <span class="score-value" id="score">0</span>
+        </div>
+        <div class="high-score-container">
+            HIGH SCORE: <span class="high-score-value" id="high-score">0</span>
+        </div>
+    </div>
+
+    <div class="controls">
+        <button class="control-btn start" id="start-btn">
+            <i class="fas fa-play"></i> START GAME
+        </button>
+        
+        <button class="control-btn" id="pause-btn">
+            <i class="fas fa-pause"></i> PAUSE
+        </button>
+        
+        <div class="character-selector">
+            <div class="character cube active" id="cube-character" title="Cube">
+                <i class="fas fa-cube"></i>
+            </div>
+            <div class="character ship" id="ship-character" title="Ship">
+                <i class="fas fa-rocket"></i>
+            </div>
+            <div class="character ufo" id="ufo-character" title="UFO">
+                <i class="fas fa-compact-disc"></i>
+            </div>
+        </div>
+        
+        <div class="difficulty">
+            <div class="diff-btn active" data-diff="easy">Easy</div>
+            <div class="diff-btn" data-diff="medium">Medium</div>
+            <div class="diff-btn" data-diff="hard">Hard</div>
+        </div>
+    </div>
+
+    <div class="mobile-controls">
+        <button class="jump-btn" id="mobile-jump">
+            <i class="fas fa-arrow-up"></i> JUMP
+        </button>
+    </div>
+
+    <div class="instructions">
+        <h3><i class="fas fa-info-circle"></i> HOW TO PLAY</h3>
+        <ul>
+            <li><strong>PC:</strong> Press SPACEBAR or UP ARROW to jump</li>
+            <li><strong>Mobile:</strong> Tap the JUMP button or screen to jump</li>
+            <li>Avoid obstacles and collect orbs to increase your score</li>
+            <li>Choose different characters and difficulty levels</li>
+            <li>The game speed increases as your score gets higher</li>
+        </ul>
+    </div>
+
+    <div class="footer">
+        <p>Geometry Dash Clone - Created with HTML5, CSS3 and JavaScript | Compatible with PC and Mobile</p>
+    </div>
+
+    <script>
+        // Game variables
+        const canvas = document.getElementById('game-canvas');
+        const ctx = canvas.getContext('2d');
+        const scoreElement = document.getElementById('score');
+        const highScoreElement = document.getElementById('high-score');
+        const startBtn = document.getElementById('start-btn');
+        const pauseBtn = document.getElementById('pause-btn');
+        const restartBtn = document.getElementById('restart-btn');
+        const gameOverScreen = document.getElementById('game-over');
+        const finalScoreElement = document.getElementById('final-score');
+        const mobileJumpBtn = document.getElementById('mobile-jump');
+        
+        // Character selection
+        const cubeCharacter = document.getElementById('cube-character');
+        const shipCharacter = document.getElementById('ship-character');
+        const ufoCharacter = document.getElementById('ufo-character');
+        
+        // Difficulty buttons
+        const diffButtons = document.querySelectorAll('.diff-btn');
+        
+        // Set canvas size
+        function resizeCanvas() {
+            canvas.width = canvas.offsetWidth;
+            canvas.height = canvas.offsetHeight;
+        }
+        
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+        
+        // Game state
+        let game = {
+            running: false,
+            paused: false,
+            score: 0,
+            highScore: localStorage.getItem('geometryDashHighScore') || 0,
+            speed: 5,
+            baseSpeed: 5,
+            gravity: 0.5,
+            jumpForce: -12,
+            gameOver: false,
+            character: 'cube',
+            difficulty: 'easy'
+        };
+        
+        // Player object
+        const player = {
+            x: 100,
+            y: canvas.height / 2,
+            width: 40,
+            height: 40,
+            velocityY: 0,
+            isJumping: false,
+            color: '#00a8ff',
+            rotation: 0
+        };
+        
+        // Obstacles array
+        let obstacles = [];
+        // Collectibles array
+        let orbs = [];
+        
+        // Initialize high score display
+        highScoreElement.textContent = game.highScore;
+        
+        // Difficulty settings
+        const difficultySettings = {
+            easy: { obstacleFrequency: 0.008, obstacleGap: 250, speedMultiplier: 1 },
+            medium: { obstacleFrequency: 0.012, obstacleGap: 220, speedMultiplier: 1.2 },
+            hard: { obstacleFrequency: 0.016, obstacleGap: 190, speedMultiplier: 1.4 }
+        };
+        
+        // Character selection
+        cubeCharacter.addEventListener('click', () => {
+            game.character = 'cube';
+            cubeCharacter.classList.add('active');
+            shipCharacter.classList.remove('active');
+            ufoCharacter.classList.remove('active');
+            player.width = 40;
+            player.height = 40;
+            game.gravity = 0.5;
+            game.jumpForce = -12;
+        });
+        
+        shipCharacter.addEventListener('click', () => {
+            game.character = 'ship';
+            cubeCharacter.classList.remove('active');
+            shipCharacter.classList.add('active');
+            ufoCharacter.classList.remove('active');
+            player.width = 50;
+            player.height = 30;
+            game.gravity = 0.3;
+            game.jumpForce = -10;
+        });
+        
+        ufoCharacter.addEventListener('click', () => {
+            game.character = 'ufo';
+            cubeCharacter.classList.remove('active');
+            shipCharacter.classList.remove('active');
+            ufoCharacter.classList.add('active');
+            player.width = 45;
+            player.height = 45;
+            game.gravity = 0.4;
+            game.jumpForce = -14;
+        });
+        
+        // Difficulty selection
+        diffButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                diffButtons.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                game.difficulty = btn.getAttribute('data-diff');
+                game.baseSpeed = 5 * difficultySettings[game.difficulty].speedMultiplier;
+                game.speed = game.baseSpeed;
+            });
+        });
+        
+        // Start game
+        startBtn.addEventListener('click', () => {
+            if (!game.running) {
+                startGame();
+            } else if (game.paused) {
+                togglePause();
+            }
+        });
+        
+        // Pause game
+        pauseBtn.addEventListener('click', togglePause);
+        
+        // Restart game
+        restartBtn.addEventListener('click', startGame);
+        
+        // Mobile jump button
+        mobileJumpBtn.addEventListener('click', jump);
+        
+        // Keyboard controls
+        document.addEventListener('keydown', (e) => {
+            if ((e.code === 'Space' || e.code === 'ArrowUp') && game.running && !game.paused) {
+                jump();
+            }
+            
+            // Pause with P key
+            if (e.code === 'KeyP' && game.running) {
+                togglePause();
+            }
+            
+            // Restart with R key
+            if (e.code === 'KeyR' && game.gameOver) {
+                startGame();
+            }
+        });
+        
+        // Touch controls for mobile
+        canvas.addEventListener('touchstart', (e) => {
+            if (game.running && !game.paused) {
+                jump();
+                e.preventDefault();
+            }
+        });
+        
+        // Click controls for PC
+        canvas.addEventListener('mousedown', () => {
+            if (game.running && !game.paused) {
+                jump();
+            }
+        });
+        
+        // Jump function
+        function jump() {
+            if (!player.isJumping && game.character === 'cube') {
+                player.velocityY = game.jumpForce;
+                player.isJumping = true;
+            } else if (game.character === 'ship' || game.character === 'ufo') {
+                player.velocityY = game.jumpForce;
+            }
+        }
+        
+        // Start game function
+        function startGame() {
+            game.running = true;
+            game.paused = false;
+            game.gameOver = false;
+            game.score = 0;
+            game.speed = game.baseSpeed;
+            
+            // Reset player
+            player.x = 100;
+            player.y = canvas.height / 2;
+            player.velocityY = 0;
+            player.isJumping = false;
+            player.rotation = 0;
+            
+            // Clear obstacles and orbs
+            obstacles = [];
+            orbs = [];
+            
+            // Hide game over screen
+            gameOverScreen.style.display = 'none';
+            
+            // Update button text
+            startBtn.innerHTML = '<i class="fas fa-play"></i> START GAME';
+            
+            // Start game loop
+            requestAnimationFrame(gameLoop);
+        }
+        
+        // Toggle pause function
+        function togglePause() {
+            if (!game.running || game.gameOver) return;
+            
+            game.paused = !game.paused;
+            
+            if (game.paused) {
+                pauseBtn.innerHTML = '<i class="fas fa-play"></i> RESUME';
+            } else {
+                pauseBtn.innerHTML = '<i class="fas fa-pause"></i> PAUSE';
+                requestAnimationFrame(gameLoop);
+            }
+        }
+        
+        // Create obstacle
+        function createObstacle() {
+            const settings = difficultySettings[game.difficulty];
+            const obstacleGap = settings.obstacleGap;
+            const minHeight = 60;
+            const maxHeight = canvas.height - obstacleGap - minHeight;
+            const height = Math.random() * (maxHeight - minHeight) + minHeight;
+            
+            // Top obstacle
+            obstacles.push({
+                x: canvas.width,
+                y: 0,
+                width: 40,
+                height: height,
+                color: '#e84118',
+                passed: false
+            });
+            
+            // Bottom obstacle
+            obstacles.push({
+                x: canvas.width,
+                y: height + obstacleGap,
+                width: 40,
+                height: canvas.height - (height + obstacleGap),
+                color: '#e84118',
+                passed: false
+            });
+        }
+        
+        // Create orb
+        function createOrb() {
+            orbs.push({
+                x: canvas.width,
+                y: Math.random() * (canvas.height - 60) + 30,
+                radius: 15,
+                color: '#00ff9d',
+                collected: false,
+                pulse: 0
+            });
+        }
+        
+        // Update game objects
+        function update() {
+            if (game.paused || game.gameOver) return;
+            
+            // Apply gravity
+            player.velocityY += game.gravity;
+            player.y += player.velocityY;
+            
+            // Rotate player based on velocity
+            if (game.character === 'cube') {
+                player.rotation += player.velocityY * 0.05;
+            } else if (game.character === 'ship') {
+                player.rotation = player.velocityY * 0.1;
+            } else if (game.character === 'ufo') {
+                player.rotation += 0.1;
+            }
+            
+            // Floor and ceiling collision
+            if (player.y <= 0) {
+                player.y = 0;
+                player.velocityY = 0;
+            }
+            
+            if (player.y + player.height >= canvas.height) {
+                if (game.character === 'cube') {
+                    player.y = canvas.height - player.height;
+                    player.isJumping = false;
+                    player.velocityY = 0;
+                } else {
+                    // For ship and UFO, bounce off the floor
+                    player.y = canvas.height - player.height;
+                    player.velocityY = -player.velocityY * 0.5;
+                }
+            }
+            
+            // Update obstacles
+            for (let i = obstacles.length - 1; i >= 0; i--) {
+                obstacles[i].x -= game.speed;
+                
+                // Remove obstacles that are off screen
+                if (obstacles[i].x + obstacles[i].width < 0) {
+                    obstacles.splice(i, 1);
+                }
+            }
+            
+            // Update orbs
+            for (let i = orbs.length - 1; i >= 0; i--) {
+                orbs[i].x -= game.speed;
+                orbs[i].pulse = Math.sin(Date.now() * 0.005) * 3;
+                
+                // Remove orbs that are off screen
+                if (orbs[i].x + orbs[i].radius < 0) {
+                    orbs.splice(i, 1);
+                }
+            }
+            
+            // Generate new obstacles
+            const settings = difficultySettings[game.difficulty];
+            if (Math.random() < settings.obstacleFrequency) {
+                createObstacle();
+            }
+            
+            // Generate new orbs (less frequently)
+            if (Math.random() < 0.005) {
+                createOrb();
+            }
+            
+            // Increase speed based on score
+            game.speed = game.baseSpeed + Math.floor(game.score / 100);
+            
+            // Check collisions
+            checkCollisions();
+            
+            // Update score
+            updateScore();
+        }
+        
+        // Check for collisions
+        function checkCollisions() {
+            // Player bounding box
+            const playerLeft = player.x;
+            const playerRight = player.x + player.width;
+            const playerTop = player.y;
+            const playerBottom = player.y + player.height;
+            
+            // Check obstacle collisions
+            for (let obstacle of obstacles) {
+                const obstacleLeft = obstacle.x;
+                const obstacleRight = obstacle.x + obstacle.width;
+                const obstacleTop = obstacle.y;
+                const obstacleBottom = obstacle.y + obstacle.height;
+                
+                if (playerRight > obstacleLeft && 
+                    playerLeft < obstacleRight && 
+                    playerBottom > obstacleTop && 
+                    playerTop < obstacleBottom) {
+                    gameOver();
+                    return;
+                }
+            }
+            
+            // Check orb collisions
+            for (let i = orbs.length - 1; i >= 0; i--) {
+                const orb = orbs[i];
+                const dx = (player.x + player.width/2) - (orb.x + orb.radius);
+                const dy = (player.y + player.height/2) - (orb.y + orb.radius);
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                
+                if (distance < player.width/2 + orb.radius && !orb.collected) {
+                    orb.collected = true;
+                    game.score += 5;
+                    orbs.splice(i, 1);
+                }
+            }
+        }
+        
+        // Update score
+        function updateScore() {
+            // Increase score for passing obstacles
+            for (let obstacle of obstacles) {
+                if (!obstacle.passed && obstacle.x + obstacle.width < player.x) {
+                    obstacle.passed = true;
+                    game.score += 1;
+                }
+            }
+            
+            // Update score display
+            scoreElement.textContent = game.score;
+            
+            // Update high score
+            if (game.score > game.highScore) {
+                game.highScore = game.score;
+                highScoreElement.textContent = game.highScore;
+                localStorage.setItem('geometryDashHighScore', game.highScore);
+            }
+        }
+        
+        // Game over function
+        function gameOver() {
+            game.running = false;
+            game.gameOver = true;
+            
+            // Show game over screen
+            gameOverScreen.style.display = 'flex';
+            finalScoreElement.textContent = game.score;
+        }
+        
+        // Draw game objects
+        function draw() {
+            // Clear canvas
+            ctx.fillStyle = '#0a0a1a';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw background grid
+            drawGrid();
+            
+            // Draw player
+            drawPlayer();
+            
+            // Draw obstacles
+            for (let obstacle of obstacles) {
+                drawRoundedRect(obstacle.x, obstacle.y, obstacle.width, obstacle.height, 5, obstacle.color);
+                
+                // Add spikes to obstacles
+                if (obstacle.height > 80) {
+                    drawSpikes(obstacle.x, obstacle.y, obstacle.width, obstacle.height);
+                }
+            }
+            
+            // Draw orbs
+            for (let orb of orbs) {
+                if (!orb.collected) {
+                    drawOrb(orb.x, orb.y, orb.radius, orb.color, orb.pulse);
+                }
+            }
+            
+            // Draw ground
+            ctx.fillStyle = '#222244';
+            ctx.fillRect(0, canvas.height - 20, canvas.width, 20);
+            
+            // Draw game status
+            if (game.paused) {
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                
+                ctx.font = 'bold 48px Arial';
+                ctx.fillStyle = '#00a8ff';
+                ctx.textAlign = 'center';
+                ctx.fillText('PAUSED', canvas.width / 2, canvas.height / 2);
+                
+                ctx.font = '24px Arial';
+                ctx.fillText('Press P or click Resume to continue', canvas.width / 2, canvas.height / 2 + 50);
+            }
+            
+            if (!game.running && !game.gameOver) {
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                
+                ctx.font = 'bold 48px Arial';
+                ctx.fillStyle = '#9c88ff';
+                ctx.textAlign = 'center';
+                ctx.fillText('GEOMETRY DASH CLONE', canvas.width / 2, canvas.height / 2 - 50);
+                
+                ctx.font = '24px Arial';
+                ctx.fillStyle = '#00a8ff';
+                ctx.fillText('Click START GAME to play', canvas.width / 2, canvas.height / 2 + 20);
+                
+                ctx.font = '18px Arial';
+                ctx.fillStyle = '#fff';
+                ctx.fillText(`High Score: ${game.highScore}`, canvas.width / 2, canvas.height / 2 + 60);
+            }
+        }
+        
+        // Draw player based on selected character
+        function drawPlayer() {
+            ctx.save();
+            ctx.translate(player.x + player.width/2, player.y + player.height/2);
+            ctx.rotate(player.rotation);
+            
+            if (game.character === 'cube') {
+                // Draw cube
+                ctx.fillStyle = player.color;
+                ctx.fillRect(-player.width/2, -player.height/2, player.width, player.height);
+                
+                // Cube face details
+                ctx.strokeStyle = '#0077b6';
+                ctx.lineWidth = 3;
+                ctx.strokeRect(-player.width/2, -player.height/2, player.width, player.height);
+                
+                // Cube eyes
+                ctx.fillStyle = '#fff';
+                ctx.fillRect(-player.width/4, -player.height/4, 8, 8);
+                ctx.fillRect(player.width/4 - 8, -player.height/4, 8, 8);
+                
+            } else if (game.character === 'ship') {
+                // Draw ship (triangle)
+                ctx.fillStyle = player.color;
+                ctx.beginPath();
+                ctx.moveTo(-player.width/2, player.height/2);
+                ctx.lineTo(player.width/2, 0);
+                ctx.lineTo(-player.width/2, -player.height/2);
+                ctx.closePath();
+                ctx.fill();
+                
+                // Ship details
+                ctx.strokeStyle = '#8c7ae6';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+                
+            } else if (game.character === 'ufo') {
+                // Draw UFO
+                ctx.fillStyle = player.color;
+                ctx.beginPath();
+                ctx.ellipse(0, 0, player.width/2, player.height/3, 0, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // UFO dome
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
+                ctx.beginPath();
+                ctx.ellipse(0, -player.height/6, player.width/3, player.height/4, 0, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // UFO lights
+                ctx.fillStyle = '#00ff9d';
+                ctx.beginPath();
+                ctx.arc(-player.width/4, player.height/6, 4, 0, Math.PI * 2);
+                ctx.fill();
+                
+                ctx.fillStyle = '#00a8ff';
+                ctx.beginPath();
+                ctx.arc(0, player.height/6, 4, 0, Math.PI * 2);
+                ctx.fill();
+                
+                ctx.fillStyle = '#9c88ff';
+                ctx.beginPath();
+                ctx.arc(player.width/4, player.height/6, 4, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            
+            ctx.restore();
+        }
+        
+        // Draw grid background
+        function drawGrid() {
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
+            ctx.lineWidth = 1;
+            
+            // Vertical lines
+            for (let x = 0; x < canvas.width; x += 50) {
+                ctx.beginPath();
+                ctx.moveTo(x, 0);
+                ctx.lineTo(x, canvas.height);
+                ctx.stroke();
+            }
+            
+            // Horizontal lines
+            for (let y = 0; y < canvas.height; y += 50) {
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(canvas.width, y);
+                ctx.stroke();
+            }
+        }
+        
+        // Draw rounded rectangle
+        function drawRoundedRect(x, y, width, height, radius, color) {
+            ctx.fillStyle = color;
+            ctx.beginPath();
+            ctx.moveTo(x + radius, y);
+            ctx.lineTo(x + width - radius, y);
+            ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+            ctx.lineTo(x + width, y + height - radius);
+            ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+            ctx.lineTo(x + radius, y + height);
+            ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+            ctx.lineTo(x, y + radius);
+            ctx.quadraticCurveTo(x, y, x + radius, y);
+            ctx.closePath();
+            ctx.fill();
+        }
+        
+        // Draw spikes on obstacles
+        function drawSpikes(x, y, width, height) {
+            ctx.fillStyle = '#c23616';
+            const spikeWidth = 10;
+            const spikeHeight = 15;
+            
+            // Top obstacle spikes (pointing down)
+            if (y > 0) {
+                for (let i = x; i < x + width; i += spikeWidth) {
+                    ctx.beginPath();
+                    ctx.moveTo(i, y + height);
+                    ctx.lineTo(i + spikeWidth/2, y + height + spikeHeight);
+                    ctx.lineTo(i + spikeWidth, y + height);
+                    ctx.closePath();
+                    ctx.fill();
+                }
+            }
+            
+            // Bottom obstacle spikes (pointing up)
+            if (y + height < canvas.height) {
+                for (let i = x; i < x + width; i += spikeWidth) {
+                    ctx.beginPath();
+                    ctx.moveTo(i, y);
+                    ctx.lineTo(i + spikeWidth/2, y - spikeHeight);
+                    ctx.lineTo(i + spikeWidth, y);
+                    ctx.closePath();
+                    ctx.fill();
+                }
+            }
+        }
+        
+        // Draw orb with pulse effect
+        function drawOrb(x, y, radius, color, pulse) {
+            ctx.fillStyle = color;
+            ctx.beginPath();
+            ctx.arc(x, y, radius + pulse, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Inner glow
+            const gradient = ctx.createRadialGradient(x, y, 0, x, y, radius + pulse);
+            gradient.addColorStop(0, 'rgba(255, 255, 255, 0.8)');
+            gradient.addColorStop(1, 'rgba(0, 255, 157, 0)');
+            
+            ctx.fillStyle = gradient;
+            ctx.beginPath();
+            ctx.arc(x, y, radius + pulse, 0, Math.PI * 2);
+            ctx.fill();
+        }
+        
+        // Main game loop
+        function gameLoop() {
+            update();
+            draw();
+            
+            if (game.running && !game.paused && !game.gameOver) {
+                requestAnimationFrame(gameLoop);
+            }
+        }
+        
+        // Initial draw
+        draw();
+    </script>
+</body>
+</html>
